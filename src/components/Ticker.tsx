@@ -4,15 +4,21 @@ interface TickerProps {
   items?: string[];
 }
 
-export const Ticker: React.FC<TickerProps> = () => {
-  const tickerContent = [
-    'CREATIVE TECHNOLOGIST',
-    'FULL STACK ARCHITECTURE',
-    'VISUAL DIRECTION & MOTION',
-    'BANGALORE (12.9716° N, 77.5946° E)',
-    'DIGITAL EXPERIENCES',
-    'AVAILABLE FOR SELECT COMMISSIONS // 2026'
+export const Ticker: React.FC<TickerProps> = ({ items }) => {
+  const defaultItems = [
+    'ASPIRING SDE @ MAANG & TIER-1 TECH',
+    'DATA STRUCTURES & ADVANCED ALGORITHMS',
+    'DISTRIBUTED SYSTEMS & SCALABLE ARCHITECTURES',
+    'IIT PATNA M.TECH CSE // ADVANCED COMPUTING',
+    'HIGH-LEVEL (HLD) & LOW-LEVEL (LLD) SYSTEM DESIGN',
+    'LOW-LATENCY MICROSERVICES & HIGH-THROUGHPUT APIS',
+    'CONCURRENCY, MULTITHREADING & ASYNC I/O',
+    'DATABASE INTERNALS, INDEXING & ACID TRANSACTIONS',
+    'ASYMPTOTIC COMPLEXITY OPTIMIZATION [O(1) / O(log N)]',
+    'EVENT-DRIVEN ARCHITECTURES & DISTRIBUTED CACHING'
   ];
+
+  const tickerContent = items && items.length > 0 ? items : defaultItems;
 
   return (
     <div className="c-ticker-tape" aria-hidden="true">

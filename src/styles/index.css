@@ -698,7 +698,7 @@ img {
 .c-ticker-tape__track {
   display: flex;
   width: max-content;
-  animation: tickerSlide 25s linear infinite;
+  animation: tickerSlide 32s linear infinite;
 }
 
 .c-ticker-tape:hover .c-ticker-tape__track {

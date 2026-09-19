@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+  <url>
+    <loc>https://www.rituraj.tech/</loc>
+    <lastmod>2026-09-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+    <image:image>
+      <image:loc>https://www.rituraj.tech/images/og-card.jpg</image:loc>
+      <image:title>Ritu Raj — Software Development Engineer Portfolio</image:title>
+      <image:caption>Official Portfolio and Systems Engineering Archive of Ritu Raj (IIT Patna)</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://www.rituraj.tech/images/Ritu_1.jpeg</image:loc>
+      <image:title>Ritu Raj Portrait</image:title>
+      <image:caption>Ritu Raj, M.Tech CSE at IIT Patna</image:caption>
+    </image:image>
+  </url>
+</urlset>

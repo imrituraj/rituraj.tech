@@ -84,6 +84,11 @@ export const Hero: React.FC = () => {
 
       {/* Main Asymmetric Composition Canvas */}
       <div className="c-editorial-hero__stage">
+        {/* Core Semantic Search Engine Headline */}
+        <h1 className="u-sr-only">
+          Ritu Raj — Software Development Engineer &amp; Systems Researcher | IIT Patna CSE
+        </h1>
+
         {/* Kinetic Row 1: RITU */}
         <div className="c-editorial-hero__name-row c-editorial-hero__name-row--one">
           <div 

@@ -1,0 +1,16 @@
+{
+  "name": "Ritu Raj | Software Development Engineer",
+  "short_name": "Ritu Raj",
+  "description": "Portfolio of Ritu Raj — Software Development Engineer & M.Tech CSE scholar at IIT Patna.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0d1117",
+  "theme_color": "#14CF93",
+  "icons": [
+    {
+      "src": "/images/favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    }
+  ]
+}

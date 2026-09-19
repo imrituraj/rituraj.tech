@@ -1,8 +1,7 @@
 -- ==============================================================================
 -- SUPABASE DATABASE SCHEMA FOR RITURAJ.TECH (IIT PATNA STUDY SUITE)
 -- ==============================================================================
--- Run this in the Supabase SQL Editor (https://supabase.com/dashboard/project/_/sql)
--- It will automatically create all tables, indexes, and Row Level Security (RLS) policies.
+-- 100% Idempotent script: Safe to run multiple times without any errors.
 
 -- 1. Enable UUID Extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
@@ -49,60 +48,42 @@ ALTER TABLE public.study_notes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.study_todos ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.study_reminders ENABLE ROW LEVEL SECURITY;
 
--- 6. RLS POLICIES (Users can only read and mutate their own records)
+-- 6. DROP EXISTING POLICIES (Prevents "policy already exists" errors)
+DROP POLICY IF EXISTS "Users can select their own notes" ON public.study_notes;
+DROP POLICY IF EXISTS "Users can insert their own notes" ON public.study_notes;
+DROP POLICY IF EXISTS "Users can update their own notes" ON public.study_notes;
+DROP POLICY IF EXISTS "Users can delete their own notes" ON public.study_notes;
+DROP POLICY IF EXISTS "Users can manage their own notes" ON public.study_notes;
 
--- Policies for study_notes
-CREATE POLICY "Users can select their own notes" 
-    ON public.study_notes FOR SELECT 
-    USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can select their own todos" ON public.study_todos;
+DROP POLICY IF EXISTS "Users can insert their own todos" ON public.study_todos;
+DROP POLICY IF EXISTS "Users can update their own todos" ON public.study_todos;
+DROP POLICY IF EXISTS "Users can delete their own todos" ON public.study_todos;
+DROP POLICY IF EXISTS "Users can manage their own todos" ON public.study_todos;
 
-CREATE POLICY "Users can insert their own notes" 
-    ON public.study_notes FOR INSERT 
+DROP POLICY IF EXISTS "Users can select their own reminders" ON public.study_reminders;
+DROP POLICY IF EXISTS "Users can insert their own reminders" ON public.study_reminders;
+DROP POLICY IF EXISTS "Users can update their own reminders" ON public.study_reminders;
+DROP POLICY IF EXISTS "Users can delete their own reminders" ON public.study_reminders;
+DROP POLICY IF EXISTS "Users can manage their own reminders" ON public.study_reminders;
+
+-- 7. RE-CREATE CLEAN CONSOLIDATED RLS POLICIES
+CREATE POLICY "Users can manage their own notes" 
+    ON public.study_notes FOR ALL 
+    USING (auth.uid() = user_id)
     WITH CHECK (auth.uid() = user_id);
 
-CREATE POLICY "Users can update their own notes" 
-    ON public.study_notes FOR UPDATE 
-    USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can delete their own notes" 
-    ON public.study_notes FOR DELETE 
-    USING (auth.uid() = user_id);
-
--- Policies for study_todos
-CREATE POLICY "Users can select their own todos" 
-    ON public.study_todos FOR SELECT 
-    USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can insert their own todos" 
-    ON public.study_todos FOR INSERT 
+CREATE POLICY "Users can manage their own todos" 
+    ON public.study_todos FOR ALL 
+    USING (auth.uid() = user_id)
     WITH CHECK (auth.uid() = user_id);
 
-CREATE POLICY "Users can update their own todos" 
-    ON public.study_todos FOR UPDATE 
-    USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can delete their own todos" 
-    ON public.study_todos FOR DELETE 
-    USING (auth.uid() = user_id);
-
--- Policies for study_reminders
-CREATE POLICY "Users can select their own reminders" 
-    ON public.study_reminders FOR SELECT 
-    USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can insert their own reminders" 
-    ON public.study_reminders FOR INSERT 
+CREATE POLICY "Users can manage their own reminders" 
+    ON public.study_reminders FOR ALL 
+    USING (auth.uid() = user_id)
     WITH CHECK (auth.uid() = user_id);
 
-CREATE POLICY "Users can update their own reminders" 
-    ON public.study_reminders FOR UPDATE 
-    USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can delete their own reminders" 
-    ON public.study_reminders FOR DELETE 
-    USING (auth.uid() = user_id);
-
--- 7. PERFORMANCE INDEXES
+-- 8. PERFORMANCE INDEXES
 CREATE INDEX IF NOT EXISTS idx_notes_user ON public.study_notes(user_id);
 CREATE INDEX IF NOT EXISTS idx_todos_user ON public.study_todos(user_id);
 CREATE INDEX IF NOT EXISTS idx_reminders_user ON public.study_reminders(user_id);

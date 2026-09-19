@@ -2362,6 +2362,33 @@ img {
   color: var(--clr-dark);
 }
 
+.c-study-sync-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 9999px;
+  font-family: var(--font-code);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  margin-left: 0.6rem;
+  vertical-align: middle;
+  transition: all var(--transition-fast);
+}
+
+.c-study-sync-pill.is-cloud {
+  background: rgba(20, 207, 147, 0.12);
+  color: #0b8a60;
+  border: 1px solid rgba(20, 207, 147, 0.4);
+}
+
+.c-study-sync-pill.is-local {
+  background: #f5f5f5;
+  color: var(--clr-muted);
+  border: 1px solid var(--clr-border);
+}
+
 .c-study-nav__logout-btn {
   display: inline-flex;
   align-items: center;

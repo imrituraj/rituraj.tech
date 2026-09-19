@@ -19,11 +19,15 @@ import {
   Copy,
   Check,
   User,
-  Info
+  Info,
+  Database,
+  Cloud
 } from 'lucide-react';
 import { NoteItem, TodoItem, ReminderItem, TodoPriority, ReminderType } from '../../types/study';
 import { initialNotes, initialTodos, initialReminders } from '../../data/defaultStudyData';
 import { weeklyTimetable, registeredCoursesSummary } from '../../data/iitpTimetable';
+import { supabaseService } from '../../lib/supabaseService';
+import { isSupabaseConfigured } from '../../lib/supabaseClient';
 
 interface StudyDashboardProps {
   onBackToPortfolio: () => void;
@@ -95,6 +99,41 @@ export const StudyDashboard: React.FC<StudyDashboardProps> = ({
     localStorage.setItem('rituraj_study_reminders', JSON.stringify(reminders));
   }, [reminders]);
 
+  // Initial Supabase Cloud Fetch on Mount
+  const [isCloudSyncing, setIsCloudSyncing] = useState(false);
+
+  useEffect(() => {
+    if (!isSupabaseConfigured) return;
+
+    let isMounted = true;
+    const fetchCloudData = async () => {
+      setIsCloudSyncing(true);
+      try {
+        const [cloudNotes, cloudTodos, cloudReminders] = await Promise.all([
+          supabaseService.getNotes(),
+          supabaseService.getTodos(),
+          supabaseService.getReminders()
+        ]);
+
+        if (!isMounted) return;
+
+        if (cloudNotes && cloudNotes.length > 0) setNotes(cloudNotes);
+        if (cloudTodos && cloudTodos.length > 0) setTodos(cloudTodos);
+        if (cloudReminders && cloudReminders.length > 0) setReminders(cloudReminders);
+      } catch (err) {
+        console.warn('Cloud sync load failed:', err);
+      } finally {
+        if (isMounted) setIsCloudSyncing(false);
+      }
+    };
+
+    fetchCloudData();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   // Clock
   const [timeStr, setTimeStr] = useState('');
   useEffect(() => {
@@ -147,14 +186,25 @@ export const StudyDashboard: React.FC<StudyDashboardProps> = ({
     setNewNoteContent('');
     setNewNoteTags('');
     setIsAddingNote(false);
+    if (isSupabaseConfigured) {
+      supabaseService.upsertNote(newNote);
+    }
   };
 
   const togglePinNote = (id: string) => {
-    setNotes(notes.map((n) => (n.id === id ? { ...n, isPinned: !n.isPinned } : n)));
+    const updated = notes.map((n) => (n.id === id ? { ...n, isPinned: !n.isPinned } : n));
+    setNotes(updated);
+    if (isSupabaseConfigured) {
+      const target = updated.find((n) => n.id === id);
+      if (target) supabaseService.upsertNote(target);
+    }
   };
 
   const deleteNote = (id: string) => {
     setNotes(notes.filter((n) => n.id !== id));
+    if (isSupabaseConfigured) {
+      supabaseService.deleteNote(id);
+    }
   };
 
   const copyNoteContent = (id: string, text: string) => {
@@ -188,14 +238,25 @@ export const StudyDashboard: React.FC<StudyDashboardProps> = ({
     setTodos([newTodo, ...todos]);
     setNewTodoTitle('');
     setIsAddingTodo(false);
+    if (isSupabaseConfigured) {
+      supabaseService.upsertTodo(newTodo);
+    }
   };
 
   const toggleTodo = (id: string) => {
-    setTodos(todos.map((t) => (t.id === id ? { ...t, completed: !t.completed } : t)));
+    const updated = todos.map((t) => (t.id === id ? { ...t, completed: !t.completed } : t));
+    setTodos(updated);
+    if (isSupabaseConfigured) {
+      const target = updated.find((t) => t.id === id);
+      if (target) supabaseService.upsertTodo(target);
+    }
   };
 
   const deleteTodo = (id: string) => {
     setTodos(todos.filter((t) => t.id !== id));
+    if (isSupabaseConfigured) {
+      supabaseService.deleteTodo(id);
+    }
   };
 
   // --- REMINDERS STATE & HANDLERS ---
@@ -223,14 +284,25 @@ export const StudyDashboard: React.FC<StudyDashboardProps> = ({
     setNewReminderNotes('');
     setNewReminderDateTime('');
     setIsAddingReminder(false);
+    if (isSupabaseConfigured) {
+      supabaseService.upsertReminder(newReminder);
+    }
   };
 
   const toggleReminder = (id: string) => {
-    setReminders(reminders.map((r) => (r.id === id ? { ...r, completed: !r.completed } : r)));
+    const updated = reminders.map((r) => (r.id === id ? { ...r, completed: !r.completed } : r));
+    setReminders(updated);
+    if (isSupabaseConfigured) {
+      const target = updated.find((r) => r.id === id);
+      if (target) supabaseService.upsertReminder(target);
+    }
   };
 
   const deleteReminder = (id: string) => {
     setReminders(reminders.filter((r) => r.id !== id));
+    if (isSupabaseConfigured) {
+      supabaseService.deleteReminder(id);
+    }
   };
 
   // Derived counts
@@ -289,6 +361,24 @@ export const StudyDashboard: React.FC<StudyDashboardProps> = ({
           <div className="c-study-nav__operator">
             <span className="c-study-nav__operator-label">OPERATOR:</span>
             <span className="c-study-nav__operator-val">ADMIN // RITU RAJ</span>
+            <span 
+              className={`c-study-sync-pill ${isSupabaseConfigured ? 'is-cloud' : 'is-local'}`} 
+              title={isSupabaseConfigured ? 'Connected to Supabase PostgreSQL cloud database' : 'Running on local browser storage. Add Supabase keys to .env to enable multi-device Cloud Sync.'}
+            >
+              {isCloudSyncing ? (
+                <span>SYNCING...</span>
+              ) : isSupabaseConfigured ? (
+                <>
+                  <Database size={11} />
+                  <span>SUPABASE POSTGRES</span>
+                </>
+              ) : (
+                <>
+                  <Cloud size={11} />
+                  <span>LOCAL MODE</span>
+                </>
+              )}
+            </span>
           </div>
           <button
             onClick={onLogout}

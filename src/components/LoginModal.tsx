@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Eye, EyeOff, Lock, User, X, ArrowRight, ShieldCheck } from 'lucide-react';
+import { supabase, isSupabaseConfigured } from '../lib/supabaseClient';
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -20,22 +21,51 @@ export const LoginModal: React.FC<LoginModalProps> = ({
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setIsLoading(true);
 
-    // Check credentials strictly
-    if (username.trim() === 'Admin' && password === 'Hello@12345') {
-      setIsLoading(true);
+    const trimmedUser = username.trim();
+
+    // 1. Instant fallback access with Master Passkey
+    if (trimmedUser === 'Admin' && password === 'Hello@12345') {
       setTimeout(() => {
         setIsLoading(false);
-        // Persist session
         sessionStorage.setItem('rituraj_study_authenticated', 'true');
         onLoginSuccess();
       }, 400);
-    } else {
-      setError('Invalid Access Credentials. Please verify ID and Password.');
+      return;
     }
+
+    // 2. Real Supabase Authentication if configured
+    if (isSupabaseConfigured) {
+      try {
+        const email = trimmedUser.includes('@') ? trimmedUser : `${trimmedUser.toLowerCase()}@rituraj.tech`;
+        const { error: authError } = await supabase.auth.signInWithPassword({
+          email,
+          password
+        });
+
+        if (authError) {
+          setIsLoading(false);
+          setError(authError.message || 'Invalid Access Credentials.');
+          return;
+        }
+
+        setIsLoading(false);
+        sessionStorage.setItem('rituraj_study_authenticated', 'true');
+        onLoginSuccess();
+        return;
+      } catch (err) {
+        setIsLoading(false);
+        setError('Authentication service unreachable. Check network.');
+        return;
+      }
+    }
+
+    setIsLoading(false);
+    setError('Invalid Access Credentials. Please verify ID and Password.');
   };
 
   const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -144,8 +174,14 @@ export const LoginModal: React.FC<LoginModalProps> = ({
         </form>
 
         <div className="c-login-modal__footer">
-          <span className="c-login-modal__hint-badge">CONFIDENTIAL</span>
-          <span>Authorized session only // IIT Patna Scholar Environment</span>
+          <span className="c-login-modal__hint-badge">
+            {isSupabaseConfigured ? 'SUPABASE POSTGRES' : 'CONFIDENTIAL'}
+          </span>
+          <span>
+            {isSupabaseConfigured
+              ? 'Cloud Auth & Realtime Database Active'
+              : 'Authorized session only // IIT Patna Scholar Environment'}
+          </span>
         </div>
       </div>
     </div>

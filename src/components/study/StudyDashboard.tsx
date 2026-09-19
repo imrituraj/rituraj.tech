@@ -14,6 +14,8 @@ import {
   CalendarDays,
   CalendarPlus,
   Download,
+  Upload,
+  ExternalLink,
   Search,
   CheckCircle2,
   Circle,
@@ -25,7 +27,7 @@ import {
   Database,
   Cloud
 } from 'lucide-react';
-import { NoteItem, TodoItem, ReminderItem, TodoPriority, ReminderType } from '../../types/study';
+import { NoteItem, TodoItem, ReminderItem, TodoPriority, ReminderType, GCalEventItem } from '../../types/study';
 import { initialNotes, initialTodos, initialReminders } from '../../data/defaultStudyData';
 import { weeklyTimetable, registeredCoursesSummary } from '../../data/iitpTimetable';
 import { supabaseService } from '../../lib/supabaseService';
@@ -34,7 +36,19 @@ import {
   createReminderGoogleCalendarUrl,
   createTodoGoogleCalendarUrl,
   createTimetableGoogleCalendarUrl,
-  downloadTimetableIcsFile
+  downloadTimetableIcsFile,
+  getStoredGoogleToken,
+  clearGoogleToken,
+  getStoredGoogleClientId,
+  setStoredGoogleClientId,
+  isAutoSyncEnabled,
+  setAutoSyncEnabled,
+  requestGoogleAccessToken,
+  syncReminderToGoogleApi,
+  syncTodoToGoogleApi,
+  deleteGoogleCalendarApiEvent,
+  fetchGoogleCalendarUpcomingEvents,
+  batchSyncTimetableAndReminders
 } from '../../lib/googleCalendarService';
 
 interface StudyDashboardProps {
@@ -56,6 +70,98 @@ export const StudyDashboard: React.FC<StudyDashboardProps> = ({
   const currentDayIndex = new Date().getDay();
   const todayDayName = daysOfWeek[currentDayIndex];
   const todayClasses = weeklyTimetable.filter((item) => item.day === todayDayName);
+
+  // --- GOOGLE CALENDAR AUTO-SYNC STATE ---
+  const [gcalToken, setGcalToken] = useState<string | null>(() => getStoredGoogleToken());
+  const [isAutoSync, setIsAutoSync] = useState<boolean>(() => isAutoSyncEnabled());
+  const [gcalClientId, setGcalClientId] = useState<string>(() => getStoredGoogleClientId());
+  const [isGCalModalOpen, setIsGCalModalOpen] = useState(false);
+  const [isBatchSyncing, setIsBatchSyncing] = useState(false);
+  const [batchSyncProgress, setBatchSyncProgress] = useState<{ current: number; total: number } | null>(null);
+  const [gcalSyncToast, setGcalSyncToast] = useState<string | null>(null);
+  const [pulledGCalEvents, setPulledGCalEvents] = useState<GCalEventItem[]>([]);
+  const [isPullingEvents, setIsPullingEvents] = useState(false);
+
+  const showGCalToast = (msg: string) => {
+    setGcalSyncToast(msg);
+    setTimeout(() => {
+      setGcalSyncToast((curr) => (curr === msg ? null : curr));
+    }, 4500);
+  };
+
+  const handleConnectGoogle = () => {
+    if (!gcalClientId.trim()) {
+      setIsGCalModalOpen(true);
+      showGCalToast('Please enter your Google OAuth Client ID in settings');
+      return;
+    }
+    setStoredGoogleClientId(gcalClientId.trim());
+    requestGoogleAccessToken(
+      gcalClientId.trim(),
+      (token) => {
+        setGcalToken(token);
+        setIsAutoSync(true);
+        setAutoSyncEnabled(true);
+        showGCalToast('Google Calendar connected! Background Auto-Sync is ON ✓');
+      },
+      () => {
+        showGCalToast('Google authorization was cancelled or failed.');
+      }
+    );
+  };
+
+  const handleDisconnectGoogle = () => {
+    clearGoogleToken();
+    setGcalToken(null);
+    showGCalToast('Google Calendar disconnected.');
+  };
+
+  const handleToggleAutoSync = () => {
+    const next = !isAutoSync;
+    setIsAutoSync(next);
+    setAutoSyncEnabled(next);
+    showGCalToast(next ? 'Google Calendar Auto-Sync ON ✓' : 'Auto-sync paused.');
+  };
+
+  const handleBatchSyncAll = async () => {
+    if (!gcalToken) {
+      handleConnectGoogle();
+      return;
+    }
+    setIsBatchSyncing(true);
+    setBatchSyncProgress({ current: 0, total: weeklyTimetable.length + reminders.length });
+    try {
+      const res = await batchSyncTimetableAndReminders(
+        weeklyTimetable,
+        reminders,
+        gcalToken,
+        (current, total) => setBatchSyncProgress({ current, total })
+      );
+      showGCalToast(`Batch sync complete: ${res.successCount} events synced to Google Calendar!`);
+    } catch (e) {
+      showGCalToast('Batch sync encountered an error.');
+    } finally {
+      setIsBatchSyncing(false);
+      setBatchSyncProgress(null);
+    }
+  };
+
+  const handlePullGoogleEvents = async () => {
+    if (!gcalToken) {
+      handleConnectGoogle();
+      return;
+    }
+    setIsPullingEvents(true);
+    try {
+      const events = await fetchGoogleCalendarUpcomingEvents(gcalToken, 8);
+      setPulledGCalEvents(events);
+      showGCalToast(`Fetched ${events.length} upcoming events from Google Calendar ✓`);
+    } catch (e) {
+      showGCalToast('Failed to fetch events from Google Calendar.');
+    } finally {
+      setIsPullingEvents(false);
+    }
+  };
 
   // State with LocalStorage persistence
   const [notes, setNotes] = useState<NoteItem[]>(() => {
@@ -249,6 +355,20 @@ export const StudyDashboard: React.FC<StudyDashboardProps> = ({
     if (isSupabaseConfigured) {
       supabaseService.upsertTodo(newTodo);
     }
+
+    // Auto-Sync to Google Calendar in background
+    if (gcalToken && isAutoSync && newTodo.dueDate) {
+      syncTodoToGoogleApi(newTodo, gcalToken).then((res) => {
+        if (res.success) {
+          showGCalToast(`[Auto-Sync] Task "${newTodo.title}" added to Google Calendar ✓`);
+          if (res.eventId) {
+            const withGcal = { ...newTodo, gcalEventId: res.eventId };
+            setTodos((prev) => prev.map((t) => (t.id === newTodo.id ? withGcal : t)));
+            if (isSupabaseConfigured) supabaseService.upsertTodo(withGcal);
+          }
+        }
+      });
+    }
   };
 
   const toggleTodo = (id: string) => {
@@ -261,9 +381,13 @@ export const StudyDashboard: React.FC<StudyDashboardProps> = ({
   };
 
   const deleteTodo = (id: string) => {
+    const target = todos.find((t) => t.id === id);
     setTodos(todos.filter((t) => t.id !== id));
     if (isSupabaseConfigured) {
       supabaseService.deleteTodo(id);
+    }
+    if (target?.gcalEventId && gcalToken) {
+      deleteGoogleCalendarApiEvent(gcalToken, target.gcalEventId);
     }
   };
 
@@ -294,6 +418,20 @@ export const StudyDashboard: React.FC<StudyDashboardProps> = ({
     setIsAddingReminder(false);
     if (isSupabaseConfigured) {
       supabaseService.upsertReminder(newReminder);
+    }
+
+    // Auto-Sync to Google Calendar in background
+    if (gcalToken && isAutoSync) {
+      syncReminderToGoogleApi(newReminder, gcalToken).then((res) => {
+        if (res.success) {
+          showGCalToast(`[Auto-Sync] "${newReminder.title}" added to Google Calendar ✓`);
+          if (res.eventId) {
+            const withGcal = { ...newReminder, gcalEventId: res.eventId };
+            setReminders((prev) => prev.map((r) => (r.id === newReminder.id ? withGcal : r)));
+            if (isSupabaseConfigured) supabaseService.upsertReminder(withGcal);
+          }
+        }
+      });
     }
   };
 
@@ -334,9 +472,13 @@ export const StudyDashboard: React.FC<StudyDashboardProps> = ({
   };
 
   const deleteReminder = (id: string) => {
+    const target = reminders.find((r) => r.id === id);
     setReminders(reminders.filter((r) => r.id !== id));
     if (isSupabaseConfigured) {
       supabaseService.deleteReminder(id);
+    }
+    if (target?.gcalEventId && gcalToken) {
+      deleteGoogleCalendarApiEvent(gcalToken, target.gcalEventId);
     }
   };
 
@@ -414,6 +556,16 @@ export const StudyDashboard: React.FC<StudyDashboardProps> = ({
                 </>
               )}
             </span>
+
+            <button 
+              type="button"
+              onClick={() => setIsGCalModalOpen(true)}
+              className={`c-study-sync-pill c-study-sync-pill--btn ${gcalToken ? (isAutoSync ? 'is-gcal-auto' : 'is-gcal-connected') : 'is-gcal-disconnected'}`} 
+              title="Configure Google Calendar Background Auto-Sync"
+            >
+              <Calendar size={11} />
+              <span>{gcalToken ? (isAutoSync ? 'GCAL AUTO-SYNC [ON]' : 'GCAL CONNECTED') : 'CONNECT GCAL'}</span>
+            </button>
           </div>
           <button
             onClick={onLogout}
@@ -1413,6 +1565,211 @@ export const StudyDashboard: React.FC<StudyDashboardProps> = ({
           </div>
         )}
       </div>
+
+      {/* Google Calendar Auto-Sync Manager Modal */}
+      {isGCalModalOpen && (
+        <div className="c-gcal-modal__overlay" onClick={() => setIsGCalModalOpen(false)}>
+          <div className="c-gcal-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="c-gcal-modal__header">
+              <div className="c-gcal-modal__header-left">
+                <Calendar size={18} className="c-gcal-modal__icon" />
+                <div>
+                  <h3 className="c-gcal-modal__title">GOOGLE CALENDAR AUTO-SYNC MANAGER</h3>
+                  <span className="c-gcal-modal__sub">IIT PATNA ACADEMIC INTEGRATION</span>
+                </div>
+              </div>
+              <button
+                className="c-gcal-modal__close"
+                onClick={() => setIsGCalModalOpen(false)}
+                title="Close"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="c-gcal-modal__body">
+              {/* Connection Status Card */}
+              <div className="c-gcal-status-card">
+                <div className="c-gcal-status-card__left">
+                  <div className={`c-gcal-status-dot ${gcalToken ? 'is-connected' : 'is-disconnected'}`} />
+                  <div>
+                    <div className="c-gcal-status-card__label">
+                      STATUS: {gcalToken ? 'AUTHORIZED (OAUTH 2.0 ACTIVE)' : 'NOT CONNECTED'}
+                    </div>
+                    <div className="c-gcal-status-card__desc">
+                      {gcalToken
+                        ? 'Google Calendar connected. Background Auto-Sync is active.'
+                        : 'Authorize your Google Account to enable direct background auto-sync.'}
+                    </div>
+                  </div>
+                </div>
+
+                {gcalToken ? (
+                  <button
+                    type="button"
+                    className="c-study-btn-secondary"
+                    onClick={handleDisconnectGoogle}
+                  >
+                    DISCONNECT
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    className="c-study-btn-gcal is-primary"
+                    onClick={handleConnectGoogle}
+                  >
+                    <CalendarPlus size={14} />
+                    <span>AUTHORIZE GOOGLE</span>
+                  </button>
+                )}
+              </div>
+
+              {/* Auto-Sync Switch */}
+              <div className="c-gcal-setting-row">
+                <div className="c-gcal-setting-info">
+                  <div className="c-gcal-setting-title">BACKGROUND AUTO-SYNC NEW EVENTS</div>
+                  <div className="c-gcal-setting-desc">
+                    When active, any exam, deadline, or task you create is instantly saved to your Google Calendar automatically without opening extra tabs.
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  className={`c-gcal-toggle ${isAutoSync ? 'is-active' : ''}`}
+                  onClick={handleToggleAutoSync}
+                  title="Toggle background auto-sync"
+                >
+                  <span className="c-gcal-toggle-handle" />
+                </button>
+              </div>
+
+              {/* Batch Actions Grid */}
+              <div className="c-gcal-actions-grid">
+                <div className="c-gcal-action-box">
+                  <div className="c-gcal-action-box__title">PUSH TO GOOGLE CALENDAR</div>
+                  <p className="c-gcal-action-box__text">
+                    Batch sync all {weeklyTimetable.length} recurring semester classes and {reminders.length} reminders directly into Google Calendar.
+                  </p>
+                  <button
+                    type="button"
+                    className="c-study-btn-primary"
+                    disabled={!gcalToken || isBatchSyncing}
+                    onClick={handleBatchSyncAll}
+                  >
+                    {isBatchSyncing ? (
+                      <span>
+                        SYNCING {batchSyncProgress?.current} OF {batchSyncProgress?.total}...
+                      </span>
+                    ) : (
+                      <>
+                        <Upload size={14} />
+                        <span>BATCH SYNC ALL NOW</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                <div className="c-gcal-action-box">
+                  <div className="c-gcal-action-box__title">PULL FROM GOOGLE CALENDAR</div>
+                  <p className="c-gcal-action-box__text">
+                    Fetch upcoming events from your Google Calendar to view them inside the IIT Patna Study Suite (2-way synchronization).
+                  </p>
+                  <button
+                    type="button"
+                    className="c-study-btn-secondary"
+                    disabled={!gcalToken || isPullingEvents}
+                    onClick={handlePullGoogleEvents}
+                  >
+                    {isPullingEvents ? (
+                      <span>FETCHING EVENTS...</span>
+                    ) : (
+                      <>
+                        <Download size={14} />
+                        <span>FETCH UPCOMING EVENTS</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* Pulled Events List if any */}
+              {pulledGCalEvents.length > 0 && (
+                <div className="c-gcal-pulled-wrap">
+                  <div className="c-gcal-pulled-header">
+                    <span>UPCOMING EVENTS FROM GOOGLE CALENDAR ({pulledGCalEvents.length})</span>
+                    <button
+                      className="c-study-btn-sm"
+                      onClick={() => setPulledGCalEvents([])}
+                    >
+                      CLEAR
+                    </button>
+                  </div>
+                  <div className="c-gcal-pulled-list">
+                    {pulledGCalEvents.map((evt) => (
+                      <div key={evt.id} className="c-gcal-pulled-item">
+                        <div>
+                          <div className="c-gcal-pulled-title">{evt.summary}</div>
+                          <div className="c-gcal-pulled-date">
+                            {evt.start ? new Date(evt.start).toLocaleString('en-US', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' }) : 'All Day'}
+                          </div>
+                        </div>
+                        {evt.htmlLink && (
+                          <a
+                            href={evt.htmlLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="c-gcal-icon-link"
+                            title="Open in Google Calendar"
+                          >
+                            <ExternalLink size={13} />
+                          </a>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Google OAuth Client ID Configuration */}
+              <div className="c-gcal-config-card">
+                <div className="c-gcal-config-header">
+                  <span className="c-gcal-config-title">GOOGLE CLOUD OAUTH CLIENT ID</span>
+                  <span className="c-study-badge">GOOGLE IDENTITY SERVICES</span>
+                </div>
+                <p className="c-gcal-config-sub">
+                  Required for background API access. Create a free OAuth 2.0 Web Client ID in Google Cloud Console with authorized JavaScript origins: <code>http://localhost:5173</code> and <code>https://rituraj.tech</code>.
+                </p>
+                <div className="c-gcal-config-input-wrap">
+                  <input
+                    type="text"
+                    placeholder="e.g. 123456789-xxxx.apps.googleusercontent.com"
+                    value={gcalClientId}
+                    onChange={(e) => setGcalClientId(e.target.value)}
+                    className="c-study-input"
+                  />
+                  <button
+                    type="button"
+                    className="c-study-btn-sm"
+                    onClick={() => {
+                      setStoredGoogleClientId(gcalClientId.trim());
+                      showGCalToast('Google Client ID saved ✓');
+                    }}
+                  >
+                    SAVE KEY
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Floating Auto-Sync Notification Toast */}
+      {gcalSyncToast && (
+        <div className="c-gcal-toast animate-slide-up">
+          <CalendarPlus size={16} />
+          <span>{gcalSyncToast}</span>
+        </div>
+      )}
     </div>
   );
 };

@@ -19,6 +19,7 @@ export interface TodoItem {
   dueDate: string;
   course?: string;
   createdAt: string;
+  gcalEventId?: string;
 }
 
 export type ReminderType = 'exam' | 'assignment' | 'lab' | 'deadline' | 'meeting';
@@ -30,6 +31,16 @@ export interface ReminderItem {
   type: ReminderType;
   completed: boolean;
   notes?: string;
+  gcalEventId?: string;
+}
+
+export interface GCalEventItem {
+  id: string;
+  summary: string;
+  start: string;
+  end: string;
+  htmlLink?: string;
+  location?: string;
 }
 
 export type DayOfWeek = 'MONDAY' | 'TUESDAY' | 'WEDNESDAY' | 'THURSDAY' | 'FRIDAY' | 'SATURDAY' | 'SUNDAY';

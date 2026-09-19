@@ -3690,4 +3690,379 @@ img {
   }
 }
 
+/* Google Calendar Auto-Sync Header Pills */
+.c-study-sync-pill--btn {
+  cursor: pointer;
+  border: 1px solid var(--clr-border);
+  transition: all var(--transition-fast);
+}
+
+.c-study-sync-pill--btn:hover {
+  transform: translateY(-1px);
+  border-color: #1a73e8;
+}
+
+.c-study-sync-pill.is-gcal-auto {
+  background: #e8f0fe;
+  color: #1967d2;
+  border: 1px solid #c2e7ff;
+}
+
+.c-study-sync-pill.is-gcal-connected {
+  background: #f1f3f4;
+  color: #3c4043;
+}
+
+.c-study-sync-pill.is-gcal-disconnected {
+  background: #f8f9fa;
+  color: var(--clr-muted);
+}
+
+/* Google Calendar Auto-Sync Modal */
+.c-gcal-modal__overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 15, 20, 0.75);
+  backdrop-filter: blur(6px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+}
+
+.c-gcal-modal {
+  background: #ffffff;
+  border: 1px solid var(--clr-dark);
+  max-width: 680px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+}
+
+.c-gcal-modal__header {
+  padding: 1.5rem 1.85rem;
+  border-bottom: 1px solid var(--clr-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #fafaf9;
+}
+
+.c-gcal-modal__header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.c-gcal-modal__icon {
+  color: #1a73e8;
+}
+
+.c-gcal-modal__title {
+  font-family: var(--font-code);
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--clr-dark);
+}
+
+.c-gcal-modal__sub {
+  font-family: var(--font-code);
+  font-size: 0.7rem;
+  color: var(--clr-muted);
+}
+
+.c-gcal-modal__close {
+  background: transparent;
+  border: none;
+  font-size: 1.25rem;
+  color: var(--clr-muted);
+  cursor: pointer;
+  padding: 0.25rem;
+  line-height: 1;
+  transition: color var(--transition-fast);
+}
+
+.c-gcal-modal__close:hover {
+  color: var(--clr-dark);
+}
+
+.c-gcal-modal__body {
+  padding: 1.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Status Card */
+.c-gcal-status-card {
+  background: #f8fafd;
+  border: 1px solid #d2e3fc;
+  padding: 1.25rem 1.5rem;
+  border-radius: 4px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.c-gcal-status-card__left {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.c-gcal-status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.c-gcal-status-dot.is-connected {
+  background: #34a853;
+  box-shadow: 0 0 0 3px rgba(52, 168, 83, 0.2);
+}
+
+.c-gcal-status-dot.is-disconnected {
+  background: #ea4335;
+  box-shadow: 0 0 0 3px rgba(234, 67, 53, 0.2);
+}
+
+.c-gcal-status-card__label {
+  font-family: var(--font-code);
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--clr-dark);
+  letter-spacing: 0.04em;
+}
+
+.c-gcal-status-card__desc {
+  font-size: 0.8rem;
+  color: var(--clr-muted);
+  margin-top: 0.2rem;
+}
+
+/* Auto-Sync Toggle Row */
+.c-gcal-setting-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1.25rem 1.5rem;
+  background: #ffffff;
+  border: 1px solid var(--clr-border);
+  border-radius: 4px;
+}
+
+.c-gcal-setting-title {
+  font-family: var(--font-code);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--clr-dark);
+  margin-bottom: 0.35rem;
+}
+
+.c-gcal-setting-desc {
+  font-size: 0.8rem;
+  color: var(--clr-muted);
+  line-height: 1.45;
+}
+
+.c-gcal-toggle {
+  width: 48px;
+  height: 26px;
+  background: #dadce0;
+  border-radius: 99px;
+  position: relative;
+  cursor: pointer;
+  border: none;
+  transition: background 0.25s ease;
+  flex-shrink: 0;
+}
+
+.c-gcal-toggle.is-active {
+  background: #1a73e8;
+}
+
+.c-gcal-toggle-handle {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  background: #ffffff;
+  border-radius: 50%;
+  transition: transform 0.25s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+}
+
+.c-gcal-toggle.is-active .c-gcal-toggle-handle {
+  transform: translateX(22px);
+}
+
+/* Actions Grid */
+.c-gcal-actions-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+}
+
+.c-gcal-action-box {
+  background: #ffffff;
+  border: 1px solid var(--clr-border);
+  padding: 1.35rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.c-gcal-action-box__title {
+  font-family: var(--font-code);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--clr-dark);
+}
+
+.c-gcal-action-box__text {
+  font-size: 0.8rem;
+  color: var(--clr-muted);
+  line-height: 1.45;
+  flex: 1;
+}
+
+/* Pulled Google Events List */
+.c-gcal-pulled-wrap {
+  border: 1px solid var(--clr-border);
+  background: #fafaf9;
+  padding: 1rem 1.25rem;
+}
+
+.c-gcal-pulled-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--font-code);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--clr-dark);
+  margin-bottom: 0.85rem;
+}
+
+.c-gcal-pulled-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: 160px;
+  overflow-y: auto;
+}
+
+.c-gcal-pulled-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.6rem 0.85rem;
+  background: #ffffff;
+  border: 1px solid var(--clr-border-subtle);
+  font-size: 0.82rem;
+}
+
+.c-gcal-pulled-title {
+  font-weight: 600;
+  color: var(--clr-dark);
+}
+
+.c-gcal-pulled-date {
+  font-family: var(--font-code);
+  font-size: 0.72rem;
+  color: var(--clr-muted);
+  margin-top: 0.15rem;
+}
+
+/* Config Card */
+.c-gcal-config-card {
+  border-top: 1px solid var(--clr-border);
+  padding-top: 1.25rem;
+}
+
+.c-gcal-config-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.4rem;
+}
+
+.c-gcal-config-title {
+  font-family: var(--font-code);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--clr-dark);
+}
+
+.c-gcal-config-sub {
+  font-size: 0.78rem;
+  color: var(--clr-muted);
+  line-height: 1.45;
+  margin-bottom: 0.85rem;
+}
+
+.c-gcal-config-sub code {
+  font-family: var(--font-code);
+  background: #f1f3f4;
+  padding: 0.15rem 0.35rem;
+  border-radius: 2px;
+  font-size: 0.72rem;
+  color: var(--clr-dark);
+}
+
+.c-gcal-config-input-wrap {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.c-gcal-config-input-wrap input {
+  flex: 1;
+}
+
+/* Floating Toast */
+.c-gcal-toast {
+  position: fixed;
+  bottom: 1.75rem;
+  right: 1.75rem;
+  background: #1f2328;
+  color: #ffffff;
+  border: 1px solid #30363d;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.28);
+  padding: 0.85rem 1.25rem;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  font-family: var(--font-code);
+  font-size: 0.8rem;
+  z-index: 10000;
+  max-width: 420px;
+}
+
+.c-gcal-toast svg {
+  color: #14cf93;
+  flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .c-gcal-actions-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 

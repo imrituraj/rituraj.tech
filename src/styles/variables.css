@@ -1,0 +1,29 @@
+:root {
+  /* Warm Gallery Paper Canvas & Editorial Palette */
+  --clr-bg: #fbfaf6;
+  --clr-paper: #ffffff;
+  --clr-ink: #111111;
+  --clr-dark: #1a1a1a;
+  --clr-body: #4a4843;
+  --clr-muted: #87847c;
+  --clr-border: rgba(18, 18, 18, 0.09);
+  --clr-border-subtle: rgba(18, 18, 18, 0.04);
+  
+  /* Signature Mint-Green Accent */
+  --clr-accent: #14cf93;
+  --clr-accent-rgb: 20, 207, 147;
+  --clr-accent-light: rgba(20, 207, 147, 0.12);
+  --clr-accent-glow: rgba(20, 207, 147, 0.25);
+
+  /* Typography Stacks */
+  --font-main: 'gilroy', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-accent: 'mazius', Georgia, serif;
+  --font-code: 'circular', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  /* Editorial Timing */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --transition-fast: 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --transition-smooth: 0.5s var(--ease-out-expo);
+  --transition-slow: 0.8s var(--ease-out-expo);
+}

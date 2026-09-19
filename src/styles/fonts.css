@@ -1,0 +1,31 @@
+@font-face {
+  font-family: 'mazius';
+  src: url('/fonts/Mazius-Extraitalic.121a71a7.otf') format('opentype');
+  font-weight: normal;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'gilroy';
+  src: url('/fonts/Gilroy-Medium.e7e7c091.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'gilroy';
+  src: url('/fonts/Gilroy-SemiBold.f3ed44cd.ttf') format('truetype');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'circular';
+  src: url('/fonts/CircularStd-Book.4420c11b.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}

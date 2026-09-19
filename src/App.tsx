@@ -14,6 +14,7 @@ import { Footer } from './components/Footer';
 import { CreditsModal } from './components/CreditsModal';
 import { LoginModal } from './components/LoginModal';
 import { StudyDashboard } from './components/study/StudyDashboard';
+import { supabase, isSupabaseConfigured } from './lib/supabaseClient';
 
 export const App: React.FC = () => {
   const [isCreditsOpen, setIsCreditsOpen] = useState(false);
@@ -23,6 +24,32 @@ export const App: React.FC = () => {
   });
   const [currentView, setCurrentView] = useState<'portfolio' | 'study'>('portfolio');
 
+  // Check Supabase session on mount
+  useEffect(() => {
+    if (isSupabaseConfigured) {
+      supabase.auth.getSession().then(({ data }) => {
+        if (data.session) {
+          setIsAuthenticated(true);
+          sessionStorage.setItem('rituraj_study_authenticated', 'true');
+        }
+      });
+
+      const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+        if (session) {
+          setIsAuthenticated(true);
+          sessionStorage.setItem('rituraj_study_authenticated', 'true');
+        } else {
+          setIsAuthenticated(false);
+          sessionStorage.removeItem('rituraj_study_authenticated');
+        }
+      });
+
+      return () => {
+        authListener.subscription.unsubscribe();
+      };
+    }
+  }, []);
+
   useEffect(() => {
     // Initialize Lenis smooth kinetic scroll only for portfolio view
     if (currentView === 'portfolio') {
@@ -31,7 +58,10 @@ export const App: React.FC = () => {
         easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
         orientation: 'vertical',
         gestureOrientation: 'vertical',
-        smoothWheel: true
+        smoothWheel: true,
+        wheelMultiplier: 1.0,
+        touchMultiplier: 1.5,
+        infinite: false
       });
 
       let animationFrameId: number;
@@ -57,8 +87,11 @@ export const App: React.FC = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     sessionStorage.removeItem('rituraj_study_authenticated');
+    if (isSupabaseConfigured) {
+      await supabase.auth.signOut();
+    }
     setIsAuthenticated(false);
     setCurrentView('portfolio');
     window.scrollTo({ top: 0, behavior: 'smooth' });

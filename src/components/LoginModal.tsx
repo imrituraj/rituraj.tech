@@ -28,44 +28,41 @@ export const LoginModal: React.FC<LoginModalProps> = ({
 
     const trimmedUser = username.trim();
 
-    // 1. Instant fallback access with Master Passkey
-    if (trimmedUser === 'Admin' && password === 'Hello@12345') {
-      setTimeout(() => {
-        setIsLoading(false);
-        sessionStorage.setItem('rituraj_study_authenticated', 'true');
-        onLoginSuccess();
-      }, 400);
+    // 100% Backend Authentication via Supabase
+    if (!isSupabaseConfigured) {
+      setIsLoading(false);
+      setError('Database environment not configured. Please check VITE_SUPABASE_URL.');
       return;
     }
 
-    // 2. Real Supabase Authentication if configured
-    if (isSupabaseConfigured) {
-      try {
-        const email = trimmedUser.includes('@') ? trimmedUser : `${trimmedUser.toLowerCase()}@rituraj.tech`;
-        const { error: authError } = await supabase.auth.signInWithPassword({
-          email,
-          password
-        });
+    try {
+      const email = trimmedUser.includes('@') 
+        ? trimmedUser 
+        : `${trimmedUser.toLowerCase()}@rituraj.tech`;
 
-        if (authError) {
-          setIsLoading(false);
-          setError(authError.message || 'Invalid Access Credentials.');
-          return;
-        }
+      const { data, error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
 
+      if (authError) {
+        setIsLoading(false);
+        setError(authError.message || 'Invalid Access Credentials.');
+        return;
+      }
+
+      if (data.session) {
         setIsLoading(false);
         sessionStorage.setItem('rituraj_study_authenticated', 'true');
         onLoginSuccess();
-        return;
-      } catch (err) {
+      } else {
         setIsLoading(false);
-        setError('Authentication service unreachable. Check network.');
-        return;
+        setError('No active session returned. Please verify credentials.');
       }
+    } catch (err) {
+      setIsLoading(false);
+      setError('Authentication server error. Check network connectivity.');
     }
-
-    setIsLoading(false);
-    setError('Invalid Access Credentials. Please verify ID and Password.');
   };
 
   const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -111,7 +108,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
 
           <div className="c-login-modal__field">
             <label htmlFor="login-username" className="c-login-modal__label">
-              OPERATOR ID / USERNAME
+              OPERATOR EMAIL / ID
             </label>
             <div className="c-login-modal__input-wrap">
               <User size={16} className="c-login-modal__icon" />
@@ -123,7 +120,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                   setUsername(e.target.value);
                   if (error) setError('');
                 }}
-                placeholder="Enter ID (Admin)"
+                placeholder="Enter email or username"
                 autoComplete="username"
                 required
                 className="c-login-modal__input"

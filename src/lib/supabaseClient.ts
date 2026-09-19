@@ -1,7 +1,10 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+const supabaseUrl = 
+  import.meta.env.VITE_SUPABASE_URL || 'https://srkmejgtihsyxyxlfcce.supabase.co';
+
+const supabaseAnonKey = 
+  import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNya21lamd0aWhzeXh5eGxmY2NlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk4Mzc5MDEsImV4cCI6MjEwNTQxMzkwMX0.Y_9CvkGhuWUOy7Mg3CKnfX1muVKU4-F_ZBFijz-34js';
 
 export const isSupabaseConfigured = Boolean(
   supabaseUrl && 
@@ -10,7 +13,4 @@ export const isSupabaseConfigured = Boolean(
   supabaseAnonKey !== 'your-anon-key'
 );
 
-// Fallback dummy client if credentials are not yet set
-export const supabase = isSupabaseConfigured
-  ? createClient(supabaseUrl, supabaseAnonKey)
-  : createClient('https://placeholder.supabase.co', 'placeholder-key');
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);

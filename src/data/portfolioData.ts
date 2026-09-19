@@ -4,7 +4,7 @@ export const personalInfo = {
   name: 'Ritu Raj',
   firstName: 'Ritu',
   lastName: 'Raj',
-  role: 'Programmer, Video Editor, Content Creator & Visual Designer',
+  role: 'Software Development Engineer & Systems Researcher',
   education: 'M.Tech CSE at IIT Patna (2026 - Present) | B.Tech from TIU, Kolkata (2022 - 2026)',
   email: 'riturcse@gmail.com',
   resumeUrl: 'https://drive.google.com/file/d/1U5NAthx0EEo74rxlabnclimdemVzTaMy/view?usp=sharing',
@@ -42,9 +42,9 @@ export const socialLinks: SocialLink[] = [
 
 export const heroInfo = {
   passions: [
-    'Programming, Video Editing,',
-    'Full stack Web Development, Designing,',
-    'Content creating and much more'
+    'Scalable Distributed Systems,',
+    'High-Performance Backend Engineering,',
+    'Algorithmic Computing & Architecture'
   ],
   socialCta: "Don't forget to checkout my Social media"
 };

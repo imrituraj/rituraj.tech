@@ -100,7 +100,7 @@ export const Hero: React.FC = () => {
               <span>DISCIPLINE &amp; FOCUS</span>
             </div>
             <p className="c-editorial-hero__callout-body">
-              Engineering web architectures, precision motion systems, and high-impact digital experiences at the intersection of logic &amp; art.
+              Engineering scalable distributed architectures, high-performance web systems, and algorithmic computing at the intersection of logic &amp; performance.
             </p>
           </div>
         </div>

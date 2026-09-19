@@ -12,6 +12,8 @@ import {
   Clock,
   Calendar,
   CalendarDays,
+  CalendarPlus,
+  Download,
   Search,
   CheckCircle2,
   Circle,
@@ -28,6 +30,12 @@ import { initialNotes, initialTodos, initialReminders } from '../../data/default
 import { weeklyTimetable, registeredCoursesSummary } from '../../data/iitpTimetable';
 import { supabaseService } from '../../lib/supabaseService';
 import { isSupabaseConfigured } from '../../lib/supabaseClient';
+import {
+  createReminderGoogleCalendarUrl,
+  createTodoGoogleCalendarUrl,
+  createTimetableGoogleCalendarUrl,
+  downloadTimetableIcsFile
+} from '../../lib/googleCalendarService';
 
 interface StudyDashboardProps {
   onBackToPortfolio: () => void;
@@ -287,6 +295,33 @@ export const StudyDashboard: React.FC<StudyDashboardProps> = ({
     if (isSupabaseConfigured) {
       supabaseService.upsertReminder(newReminder);
     }
+  };
+
+  const handleAddAndOpenGoogleCalendar = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!newReminderTitle.trim()) return;
+
+    const newReminder: ReminderItem = {
+      id: 'rem-' + Date.now(),
+      title: newReminderTitle.trim(),
+      type: newReminderType,
+      dateTime: newReminderDateTime || new Date().toISOString().slice(0, 16).replace('T', ' '),
+      notes: newReminderNotes.trim(),
+      completed: false
+    };
+
+    setReminders([newReminder, ...reminders]);
+    if (isSupabaseConfigured) {
+      supabaseService.upsertReminder(newReminder);
+    }
+
+    const gcalUrl = createReminderGoogleCalendarUrl(newReminder);
+    window.open(gcalUrl, '_blank', 'noopener,noreferrer');
+
+    setNewReminderTitle('');
+    setNewReminderNotes('');
+    setNewReminderDateTime('');
+    setIsAddingReminder(false);
   };
 
   const toggleReminder = (id: string) => {
@@ -574,6 +609,15 @@ export const StudyDashboard: React.FC<StudyDashboardProps> = ({
                             <div className="c-study-overview-item__note">{rem.notes}</div>
                           )}
                         </div>
+                        <a
+                          href={createReminderGoogleCalendarUrl(rem)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="c-gcal-mini-link"
+                          title="Sync deadline to Google Calendar"
+                        >
+                          <CalendarPlus size={14} />
+                        </a>
                       </div>
                     ))
                   )}
@@ -619,6 +663,15 @@ export const StudyDashboard: React.FC<StudyDashboardProps> = ({
                             </div>
                           )}
                         </div>
+                        <a
+                          href={createTimetableGoogleCalendarUrl(cls)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="c-gcal-mini-link"
+                          title="Add class to Google Calendar"
+                        >
+                          <CalendarPlus size={14} />
+                        </a>
                       </div>
                     ))
                   )}
@@ -651,6 +704,15 @@ export const StudyDashboard: React.FC<StudyDashboardProps> = ({
               </div>
               <div className="c-tt-banner__right">
                 <span className="c-tt-banner__chip">OFFICIAL 1-PAGE SCHEDULE</span>
+                <button
+                  type="button"
+                  className="c-study-btn-gcal"
+                  onClick={() => downloadTimetableIcsFile(weeklyTimetable)}
+                  title="Download complete recurring semester schedule (.ics) for Google Calendar"
+                >
+                  <Download size={14} />
+                  <span>EXPORT SCHEDULE TO GOOGLE CALENDAR (.ICS)</span>
+                </button>
               </div>
             </div>
 
@@ -677,10 +739,21 @@ export const StudyDashboard: React.FC<StudyDashboardProps> = ({
                   <div key={entry.id} className="c-tt-card">
                     <div className="c-tt-card__top">
                       <span className="c-tt-card__day">{entry.day}</span>
-                      <span className="c-tt-card__time">
-                        <Clock size={13} />
-                        {entry.timeSlot}
-                      </span>
+                      <div className="c-tt-card__top-right">
+                        <span className="c-tt-card__time">
+                          <Clock size={13} />
+                          {entry.timeSlot}
+                        </span>
+                        <a
+                          href={createTimetableGoogleCalendarUrl(entry)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="c-gcal-icon-link"
+                          title="Add this class to Google Calendar"
+                        >
+                          <CalendarPlus size={14} />
+                        </a>
+                      </div>
                     </div>
 
                     <div className="c-tt-card__body">
@@ -1137,13 +1210,24 @@ export const StudyDashboard: React.FC<StudyDashboardProps> = ({
                       </div>
                     </div>
 
-                    <button
-                      onClick={() => deleteTodo(todo.id)}
-                      className="c-todo-row__delete"
-                      title="Remove task"
-                    >
-                      <Trash2 size={15} />
-                    </button>
+                    <div className="c-todo-row__actions">
+                      <a
+                        href={createTodoGoogleCalendarUrl(todo)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="c-todo-row__gcal"
+                        title="Add task deadline to Google Calendar"
+                      >
+                        <CalendarPlus size={15} />
+                      </a>
+                      <button
+                        onClick={() => deleteTodo(todo.id)}
+                        className="c-todo-row__delete"
+                        title="Remove task"
+                      >
+                        <Trash2 size={15} />
+                      </button>
+                    </div>
                   </div>
                 ))}
 
@@ -1243,6 +1327,15 @@ export const StudyDashboard: React.FC<StudyDashboardProps> = ({
                   >
                     DISCARD
                   </button>
+                  <button
+                    type="button"
+                    className="c-study-btn-gcal"
+                    onClick={handleAddAndOpenGoogleCalendar}
+                    title="Save reminder and open in Google Calendar"
+                  >
+                    <CalendarPlus size={14} />
+                    <span>SAVE & SYNC TO GOOGLE CALENDAR</span>
+                  </button>
                   <button type="submit" className="c-study-btn-primary">
                     SCHEDULE REMINDER
                   </button>
@@ -1264,6 +1357,15 @@ export const StudyDashboard: React.FC<StudyDashboardProps> = ({
                       </span>
                     </div>
                     <div className="c-reminder-card__actions">
+                      <a
+                        href={createReminderGoogleCalendarUrl(rem)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="c-rem-action-btn c-gcal-link"
+                        title="Sync deadline to Google Calendar"
+                      >
+                        <CalendarPlus size={16} />
+                      </a>
                       <button
                         onClick={() => toggleReminder(rem.id)}
                         className={`c-rem-action-btn ${rem.completed ? 'is-done' : ''}`}

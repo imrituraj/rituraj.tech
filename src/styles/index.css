@@ -3569,4 +3569,125 @@ img {
   border-top: 1px solid var(--clr-border-subtle);
 }
 
+/* ==========================================================================
+   GOOGLE CALENDAR & iCAL (.ICS) INTEGRATION STYLES
+   ========================================================================== */
+.c-study-btn-gcal {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #ffffff;
+  color: #1a73e8;
+  border: 1px solid #dadce0;
+  padding: 0.55rem 0.95rem;
+  font-family: var(--font-code);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  text-decoration: none;
+}
+
+.c-study-btn-gcal:hover {
+  background: #f8fafd;
+  border-color: #1a73e8;
+  color: #174ea6;
+  box-shadow: 0 1px 3px rgba(60, 64, 67, 0.15);
+  transform: translateY(-1px);
+}
+
+.c-tt-banner__right {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.c-tt-card__top-right {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.c-gcal-icon-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 4px;
+  color: var(--clr-muted);
+  border: 1px solid transparent;
+  transition: all var(--transition-fast);
+}
+
+.c-gcal-icon-link:hover {
+  color: #1a73e8;
+  background: #f0f6ff;
+  border-color: #d2e3fc;
+  transform: scale(1.08);
+}
+
+.c-rem-action-btn.c-gcal-link {
+  color: var(--clr-muted);
+  transition: all var(--transition-fast);
+}
+
+.c-rem-action-btn.c-gcal-link:hover {
+  color: #1a73e8;
+  transform: scale(1.12);
+}
+
+.c-todo-row__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.c-todo-row__gcal {
+  background: transparent;
+  border: none;
+  color: var(--clr-muted);
+  cursor: pointer;
+  padding: 0.35rem;
+  display: flex;
+  align-items: center;
+  transition: all var(--transition-fast);
+  border-radius: 4px;
+}
+
+.c-todo-row__gcal:hover {
+  color: #1a73e8;
+  background: #f0f6ff;
+  transform: scale(1.1);
+}
+
+.c-gcal-mini-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  color: var(--clr-muted);
+  border-radius: 4px;
+  margin-left: 0.5rem;
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.c-gcal-mini-link:hover {
+  color: #1a73e8;
+  background: #f0f6ff;
+  transform: scale(1.12);
+}
+
+@media (max-width: 768px) {
+  .c-tt-banner__right {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}
+
 
